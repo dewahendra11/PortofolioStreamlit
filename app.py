@@ -11,7 +11,7 @@ st.sidebar.image("https://via.placeholder.com/150", caption="Foto Profil")  # Bi
 st.sidebar.markdown("""
 **Nama:** Sahadewa Hendra Muhammad  
 **Bio:** Lorem ipsum dolor sit amet, consectetur adipiscing elit.  
-**Kontak:** email@example.com | LinkedIn | GitHub
+**Kontak:** dewanugelo456@gmail.com | LinkedIn | GitHub
 """)
 
 # =========================
