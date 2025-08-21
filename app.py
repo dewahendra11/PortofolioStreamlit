@@ -21,8 +21,8 @@ st.sidebar.markdown("""
 st.title("📊 Data Analyst")
 st.subheader("Exploratory Data Analysis pada Data E-Commerce")
 
-st.image("ecomm.jpeg", caption="sumber gambar: midtrans.com/id/blog/e-commerce", use_column_width=True)
-st.markdown("""Dataset UCI – Online Retail II merupakan kumpulan data transaksi nyata dari sebuah perusahaan retail online non-store yang berbasis di Inggris, mencatat lebih dari satu juta transaksi yang berlangsung antara Desember 2009 hingga Desember 2011. Setiap baris dalam dataset ini merepresentasikan detail transaksi, mulai dari nomor faktur, kode produk, deskripsi barang, jumlah yang dibeli, harga per unit, hingga identitas pelanggan dan negara asalnya. Data ini penting untuk dianalisis karena menyajikan potret nyata perilaku konsumen dalam e-commerce lintas negara, yang memungkinkan peneliti maupun praktisi bisnis untuk memahami pola pembelian, segmentasi pelanggan, tren penjualan musiman, hingga hubungan antarproduk yang sering dibeli bersamaan. Selain itu, analisis dataset ini juga dapat membantu perusahaan dalam mengoptimalkan strategi pemasaran, manajemen inventori, hingga pengembangan sistem rekomendasi, menjadikannya sumber yang relevan baik untuk riset akademis maupun pengambilan keputusan bisnis berbasis data.""")
+st.image("ecomm.jpeg", caption="sumber gambar: midtrans.com/id/blog/e-commerce", st.image("gambar.png", use_container_width=True))
+st.markdown("""Dataset UCI – Online Retail II merupakan kumpulan data transaksi nyata dari sebuah perusahaan retail online non-store yang berbasis di Inggris, mencatat lebih dari satu juta transaksi yang berlangsung antara Desember 2009 hingga Desember 2011. Setiap baris dalam dataset ini merepresentasikan detail transaksi, mulai dari nomor faktur, kode produk, deskripsi barang, jumlah yang dibeli, harga per unit, hingga identitas pelanggan dan negara asalnya. Data ini penting untuk dianalisis karena menyajikan potret nyata perilaku konsumen dalam e-commerce lintas negara, yang memungkinkan peneliti maupun praktisi bisnis untuk memahami pola pembelian, tren penjualan musiman, hingga hubungan antarproduk yang sering dibeli bersamaan. Selain itu, analisis dataset ini juga dapat membantu perusahaan dalam mengoptimalkan strategi pemasaran, manajemen inventori, hingga pengembangan sistem rekomendasi, menjadikannya sumber yang relevan baik untuk riset akademis maupun pengambilan keputusan bisnis berbasis data.""")
 
 # =============================
 # Load Data
@@ -114,10 +114,25 @@ Hasil eksplorasi terhadap produk yang paling banyak dibeli oleh lima negara deng
 # =============================
 st.header("5. Hubungan Penjualan vs Revenue")
 
-product_sales = df.groupby('StockCode').agg({'Quantity':'sum','Revenue':'sum'}).reset_index()
+merged_rev_sorted = merged_rev.sort_values('Total_Revenue', ascending=False).head(5)
 
-fig, ax = plt.subplots()
-sns.boxplot(data=product_sales, x='Quantity', y='Revenue', ax=ax)
+# Visualisasi
+fig, ax = plt.subplots(figsize=(10,6))
+bar_width = 0.4
+x = range(len(merged_rev_sorted))
+
+ax.bar(x, merged_rev_sorted['Total_Revenue'], 
+       width=bar_width, label='Revenue', color='skyblue')
+ax.bar([i + bar_width for i in x], merged_rev_sorted['Total_Quantity'], 
+       width=bar_width, label='Quantity', color='orange')
+
+ax.set_xticks([i + bar_width/2 for i in x])
+ax.set_xticklabels(merged_rev_sorted['StockCode'])
+ax.set_xlabel('Product (StockCode)')
+ax.set_ylabel('Total')
+ax.set_title('Komparasi Total Revenue dengan Total Quantity Terjual untuk Top 5 Products')
+ax.legend()
+
 st.pyplot(fig)
 
 
