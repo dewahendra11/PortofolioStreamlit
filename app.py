@@ -114,6 +114,18 @@ Hasil eksplorasi terhadap produk yang paling banyak dibeli oleh lima negara deng
 # =============================
 st.header("5. Hubungan Penjualan vs Revenue")
 
+# Pastikan Revenue sudah dihitung
+df['Revenue'] = df['Quantity'] * df['UnitPrice']
+
+# Hitung total quantity dan revenue per produk
+product_quantity = df.groupby('StockCode')['Quantity'].sum().reset_index()
+product_revenue = df.groupby('StockCode')['Revenue'].sum().reset_index()
+
+# Gabungkan Quantity dan Revenue
+merged_rev = pd.merge(product_quantity, product_revenue, on='StockCode', how='inner')
+merged_rev.rename(columns={'Quantity': 'Total_Quantity', 'Revenue': 'Total_Revenue'}, inplace=True)
+
+
 merged_rev_sorted = merged_rev.sort_values('Total_Revenue', ascending=False).head(5)
 
 # Visualisasi
