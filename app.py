@@ -1,89 +1,150 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import plotly.express as px
+import matplotlib.pyplot as plt
+import seaborn as sns
 
-# =========================
-# SIDEBAR PROFIL
-# =========================
-st.sidebar.title("Profil Singkat")
-st.sidebar.image("https://via.placeholder.com/150", caption="Foto Profil")  # Bisa diganti dengan foto kamu
-st.sidebar.markdown("""
-**Nama:** Sahadewa Hendra Muhammad  
-**Bio:** Lorem ipsum dolor sit amet, consectetur adipiscing elit.  
-**Kontak:** dewanugelo456@gmail.com | LinkedIn | GitHub
-""")
+# ======================
+# 1. Load Dataset
+# ======================
+@st.cache_data
+def load_data():
+    df = pd.read_csv("ecommerce.csv", encoding="latin1")
+    df['InvoiceDate'] = pd.to_datetime(df['InvoiceDate'])
+    df['Revenue'] = df['Quantity'] * df['UnitPrice']
+    return df
 
-# =========================
-# HALAMAN UTAMA
-# =========================
-st.title("📊 Portofolio Data Analyst")
-st.markdown("Selamat datang di dashboard portofolio saya. Berikut adalah beberapa proyek analisis data yang pernah saya kerjakan.")
+df = load_data()
 
-# Tabs untuk memisahkan proyek
-tab1, tab2, tab3 = st.tabs(["📈 Proyek 1", "📉 Proyek 2", "🌍 Proyek 3"])
+# ======================
+# Sidebar Navigation
+# ======================
+st.sidebar.title("📊 E-Commerce Dashboard")
+page = st.sidebar.radio("Navigasi", [
+    "Profil Proyek",
+    "Overview",
+    "Analisis Produk",
+    "Analisis Pelanggan",
+    "Segmentasi RFM",
+    "Deteksi Anomali",
+    "Kesimpulan & Rekomendasi"
+])
 
-# =========================
-# TAB 1
-# =========================
-with tab1:
-    st.header("Judul Proyek 1: Lorem Ipsum")
-    st.markdown("""
-    **Tujuan:** Lorem ipsum dolor sit amet, consectetur adipiscing elit.  
-    **Hasil Analisis:** Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.  
-    **Insight:** Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.
+# ======================
+# 2. Profil Proyek
+# ======================
+if page == "Portofolio":
+    st.title("📌 Portofolio")
+    st.subheader("Nama: Sahadewa Hendra Muhammad")
+    st.write("Bio: Data Analyst Enthusiast dengan fokus pada analisis E-Commerce.")
+    st.write("Kontak: dewanugelo456@gmail.com | [LinkedIn](https://www.linkedin.com/in/dewahendra/)")
+    st.markdown("---")
+    st.write("**Judul Proyek:** E-Commerce Customer & Product Analysis")
+    st.write("**Deskripsi:** Analisis ini bertujuan mengeksplorasi perilaku pelanggan, kinerja produk, dan mendeteksi anomali transaksi untuk mendukung pengambilan keputusan bisnis.")
+
+# ======================
+# 3. Overview
+# ======================
+elif page == "Overview":
+    st.title("📊 Overview Bisnis")
+
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Total Revenue", f"${df['Revenue'].sum():,.0f}")
+    col2.metric("Total Transaksi", f"{df['InvoiceNo'].nunique():,}")
+    col3.metric("Total Customer", f"{df['CustomerID'].nunique():,}")
+
+    st.subheader("Tren Penjualan Bulanan")
+    monthly = df.groupby(df['InvoiceDate'].dt.to_period("M"))['Revenue'].sum().reset_index()
+    monthly['InvoiceDate'] = monthly['InvoiceDate'].astype(str)
+    fig, ax = plt.subplots(figsize=(10,4))
+    sns.lineplot(data=monthly, x="InvoiceDate", y="Revenue", marker="o", ax=ax)
+    plt.xticks(rotation=45)
+    st.pyplot(fig)
+
+# ======================
+# 4. Analisis Produk
+# ======================
+elif page == "Analisis Produk":
+    st.title("📦 Analisis Produk")
+
+    st.subheader("Top 10 Produk Berdasarkan Revenue")
+    top_products = df.groupby("Description")['Revenue'].sum().nlargest(10).reset_index()
+    fig, ax = plt.subplots(figsize=(8,4))
+    sns.barplot(data=top_products, x="Revenue", y="Description", ax=ax)
+    st.pyplot(fig)
+
+    st.subheader("Produk dengan Retur Tertinggi")
+    retur = df[df['Quantity'] < 0].groupby("Description")['Quantity'].sum().nsmallest(10).reset_index()
+    st.dataframe(retur)
+
+# ======================
+# 5. Analisis Pelanggan
+# ======================
+elif page == "Analisis Pelanggan":
+    st.title("👥 Analisis Pelanggan")
+
+    st.subheader("Distribusi Total Belanja per Customer")
+    customer_revenue = df.groupby("CustomerID")['Revenue'].sum().reset_index()
+    fig, ax = plt.subplots(figsize=(8,4))
+    sns.histplot(customer_revenue['Revenue'], bins=50, ax=ax)
+    st.pyplot(fig)
+
+    st.subheader("Top 10 Customer")
+    top_customers = customer_revenue.nlargest(10, "Revenue")
+    st.dataframe(top_customers)
+
+# ======================
+# 6. Segmentasi RFM
+# ======================
+elif page == "Segmentasi RFM":
+    st.title("📈 Segmentasi Pelanggan (RFM)")
+
+    ref_date = df['InvoiceDate'].max() + pd.Timedelta(days=1)
+    rfm = df.groupby('CustomerID').agg({
+        'InvoiceDate': lambda x: (ref_date - x.max()).days,
+        'InvoiceNo': 'count',
+        'Revenue': 'sum'
+    }).reset_index()
+    rfm.columns = ['CustomerID', 'Recency', 'Frequency', 'Monetary']
+
+    st.dataframe(rfm.head())
+
+    st.subheader("Scatter Plot: Frequency vs Monetary")
+    fig, ax = plt.subplots(figsize=(6,4))
+    sns.scatterplot(data=rfm, x="Frequency", y="Monetary", ax=ax)
+    st.pyplot(fig)
+
+# ======================
+# 7. Deteksi Anomali
+# ======================
+elif page == "Deteksi Anomali":
+    st.title("🚨 Deteksi Anomali")
+
+    st.subheader("Boxplot Quantity")
+    fig, ax = plt.subplots(figsize=(6,4))
+    sns.boxplot(x=df['Quantity'], ax=ax)
+    st.pyplot(fig)
+
+    st.subheader("Boxplot UnitPrice")
+    fig, ax = plt.subplots(figsize=(6,4))
+    sns.boxplot(x=df['UnitPrice'], ax=ax)
+    st.pyplot(fig)
+
+    st.subheader("Contoh Transaksi Anomali (Quantity > 1000)")
+    st.dataframe(df[df['Quantity'] > 1000].head())
+
+# ======================
+# 8. Kesimpulan
+# ======================
+elif page == "Kesimpulan & Rekomendasi":
+    st.title("📝 Kesimpulan & Rekomendasi")
+    st.write("""
+    - Produk tertentu berkontribusi besar terhadap revenue.
+    - Pelanggan VIP memberikan sebagian besar pendapatan.
+    - Ada indikasi anomali pada transaksi dengan jumlah produk sangat besar atau harga abnormal.
+    
+    **Rekomendasi:**
+    1. Fokuskan promosi pada produk best seller.
+    2. Buat program loyalitas untuk pelanggan top spender.
+    3. Lakukan kontrol kualitas pada produk dengan retur tinggi.
+    4. Investigasi transaksi anomali untuk fraud detection.
     """)
-    
-    # Contoh data random
-    df = pd.DataFrame({
-        "Bulan": pd.date_range("2023-01-01", periods=12, freq="M"),
-        "Penjualan": np.random.randint(100, 500, size=12)
-    })
-    
-    # Visualisasi interaktif
-    fig = px.line(df, x="Bulan", y="Penjualan", title="Tren Penjualan Bulanan")
-    st.plotly_chart(fig, use_container_width=True)
-
-# =========================
-# TAB 2
-# =========================
-with tab2:
-    st.header("Judul Proyek 2: Lorem Ipsum Dolor")
-    st.markdown("""
-    **Tujuan:** Lorem ipsum dolor sit amet, consectetur adipiscing elit.  
-    **Hasil Analisis:** Vivamus suscipit tortor eget felis porttitor volutpat.  
-    **Insight:** Curabitur non nulla sit amet nisl tempus convallis quis ac lectus.
-    """)
-    
-    # Data random
-    df2 = pd.DataFrame({
-        "Kategori": ["A", "B", "C", "D"],
-        "Jumlah": np.random.randint(50, 200, size=4)
-    })
-    
-    # Visualisasi interaktif
-    fig2 = px.bar(df2, x="Kategori", y="Jumlah", title="Perbandingan Kategori Produk", text="Jumlah")
-    st.plotly_chart(fig2, use_container_width=True)
-
-# =========================
-# TAB 3
-# =========================
-with tab3:
-    st.header("Judul Proyek 3: Lorem Ipsum World Data")
-    st.markdown("""
-    **Tujuan:** Lorem ipsum dolor sit amet, consectetur adipiscing elit.  
-    **Hasil Analisis:** Proin eget tortor risus. Nulla quis lorem ut libero malesuada feugiat.  
-    **Insight:** Donec sollicitudin molestie malesuada.
-    """)
-    
-    # Data random untuk scatter plot
-    df3 = pd.DataFrame({
-        "x": np.random.randn(100),
-        "y": np.random.randn(100),
-        "size": np.random.randint(10, 50, size=100),
-        "color": np.random.choice(["Group A", "Group B", "Group C"], size=100)
-    })
-    
-    fig3 = px.scatter(df3, x="x", y="y", size="size", color="color",
-                      title="Distribusi Data Acak (Scatter Plot)", opacity=0.7)
-    st.plotly_chart(fig3, use_container_width=True)
