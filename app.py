@@ -21,7 +21,7 @@ st.sidebar.markdown("""
 st.title("📊 Data Analyst")
 st.subheader("Exploratory Data Analysis pada Data E-Commerce")
 
-st.image("ecomm.jpeg", caption="sumber gambar: midtrans.com/id/blog/e-commerce", st.image("gambar.png", use_container_width=True))
+st.image("ecomm.jpeg", caption="sumber gambar: midtrans.com/id/blog/e-commerce", use_container_width=True)
 st.markdown("""Dataset UCI – Online Retail II merupakan kumpulan data transaksi nyata dari sebuah perusahaan retail online non-store yang berbasis di Inggris, mencatat lebih dari satu juta transaksi yang berlangsung antara Desember 2009 hingga Desember 2011. Setiap baris dalam dataset ini merepresentasikan detail transaksi, mulai dari nomor faktur, kode produk, deskripsi barang, jumlah yang dibeli, harga per unit, hingga identitas pelanggan dan negara asalnya. Data ini penting untuk dianalisis karena menyajikan potret nyata perilaku konsumen dalam e-commerce lintas negara, yang memungkinkan peneliti maupun praktisi bisnis untuk memahami pola pembelian, tren penjualan musiman, hingga hubungan antarproduk yang sering dibeli bersamaan. Selain itu, analisis dataset ini juga dapat membantu perusahaan dalam mengoptimalkan strategi pemasaran, manajemen inventori, hingga pengembangan sistem rekomendasi, menjadikannya sumber yang relevan baik untuk riset akademis maupun pengambilan keputusan bisnis berbasis data.""")
 
 # =============================
